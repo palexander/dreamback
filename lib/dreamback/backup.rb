@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'net/sftp'
 
 module Dreamback
@@ -45,10 +44,12 @@ module Dreamback
 
         # Delete any folders older than our limit
         # Subtract one to account for the folder we're about to create
-        if backup_folders.length >= Dreamback.settings[:days_to_keep] - 1
-          folders_to_delete = backup_folders.slice(Dreamback.settings[:days_to_keep] - 1, backup_folders.length)
+        # Normally we remove a folder so that our count is one less than the "days to keep"
+        # However, if today's folder already exists then there's no need
+        offset = backup_folders.include?("dreamback.#{Time.now.strftime("%Y%m%d")}") ? 0 : 1
+        if backup_folders.length >= Dreamback.settings[:days_to_keep] - offset
+          folders_to_delete = backup_folders.slice(Dreamback.settings[:days_to_keep] - offset, backup_folders.length)
           folders_to_delete.map! {|f| f[0]}
-          p folders_to_delete
           rsync_delete(folders_to_delete)
         end
       end
@@ -91,7 +92,7 @@ module Dreamback
         link_dest = link_dir.nil? ? "" : "--link-dest=~#{BACKUP_FOLDER.gsub(".", "")}/#{link_dir}"
         `rsync -e ssh -av --delete --copy-links --keep-dirlinks #{link_dest} #{tmp_dir}/ #{backup_server_user}@#{backup_server}:#{BACKUP_FOLDER}/dreamback.#{today}`
         # Remove the staging directory
-        # `rm -rf #{tmp_dir}`
+        `rm -rf #{tmp_dir}`
       end
     end
   end

@@ -1,4 +1,6 @@
 require 'json'
+require 'net/sftp'
+require 'cronedit'
 
 module Dreamback
   @settings
@@ -31,16 +33,24 @@ module Dreamback
       if @settings.nil? || @settings.empty?
         create_new_settings
         save_settings(SETTINGS_LOCATION)
+      else
+        say(bold("You have already setup Dreamback. Please run \"dreamback backup\" to start a backup."))
       end
 
       # Create ssh keys if they don't exist
-      ssh_keys_exist = File.exists?(File.expand_path("~/.ssh/id_rsa"))
+      ssh_keys_exist = File.exists?(File.expand_path("~/.ssh/id_dsa"))
       create_ssh_keys unless ssh_keys_exist
 
       # Copy ssh keys to backup server
       unless @settings[:copied_backup_server_ssh_keys]
-        say(bold("Copying the ssh key to your backup server, type in your password when prompted for #{@settings[:backup_server_user]}@#{@settings[:backup_server]}"))
-        `ssh-copy-id -i #{@settings[:backup_server_user]}@#{@settings[:backup_server]}`
+        say(bold("Copying the ssh key to your backup server, type in your password if prompted for #{@settings[:backup_server_user]}@#{@settings[:backup_server]}"))
+        overwrite_keys = agree(bold("WARNING: ") + "This will overwrite existing ssh keys on your backup user account. Proceed? [y/n]: ")
+        if overwrite_keys
+          sftp_password = ask("Password for #{@settings[:backup_server]}@#{@settings[:backup_server_user]}: ") { |q| q.echo = "*" }
+          sftp_ssh_key_upload(sftp_password)
+        else
+          say("You will need to add the ssh key yourself to automate backups")
+        end
         @settings[:copied_backup_server_ssh_keys] = true
       end
 
@@ -48,10 +58,26 @@ module Dreamback
       unless @settings[:copied_dreamhost_users_ssh_keys]
         say(bold("Copying the ssh key to the dreamhost accounts you want to back up"))
         @settings[:dreamhost_users].each do |dreamhost|
-          say(bold("Type in password for #{dreamhost[:user]}@#{dreamhost[:server]}"))
+          say(bold("Type in password if prompted for #{dreamhost[:user]}@#{dreamhost[:server]}"))
           `ssh-copy-id -i #{dreamhost[:user]}@#{dreamhost[:server]}`
         end
         @settings[:copied_dreamhost_users_ssh_keys] = true
+      end
+
+      # Setup a cron job if the user would like to
+      unless @settings[:cron_setup_completed]
+        setup_cron = agree(bold("Would you like to add a cron job to automatically run the backup? [y/n]: "))
+        if setup_cron
+          crontab_email = ask("Dreamhost requires an email address to send crontab output to, please provide one: ") { |q| q.validate = /\b[A-Za-z0-9._%-\+]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}\b/ }
+          ct = File.open(File.expand_path("~/.dreamback_crontab"), "w+")
+          ct << "MAILTO=#{crontab_email}\n"
+          ct << "0 1 * * * dreamback backup"
+          ct.close
+          `crontab #{ct.path}`
+          File.delete(ct.path)
+          say("Cron job added. Backups will run at 1:00am Pacific every day.")
+        end
+        @settings[:cron_setup_completed] = true
       end
 
       save_settings(SETTINGS_LOCATION)
@@ -61,6 +87,16 @@ module Dreamback
     end
 
     private
+
+    # Dreamhost doesn't allow ssh shell access, so use sftp to write to the authorized_key file
+    # @param [String] password for backup user
+    def self.sftp_ssh_key_upload(sftp_password)
+      Net::SFTP.start(@settings[:backup_server], @settings[:backup_server_user], :password => sftp_password) do |sftp|
+        sftp.file.open(".ssh/authorized_keys", "w") do |f|
+          f.write File.open(File.expand_path("~/.ssh/id_dsa"), "r").read
+        end
+      end
+    end
 
     # Ask the user for settings
     def self.create_new_settings
@@ -83,15 +119,21 @@ module Dreamback
 
     # Create ssh keys for user when they don't exist
     def self.create_ssh_keys
-      ssh_key_location = File.expand_path("~/.ssh/id_rsa")
-      say(bold("You are missing an RSA ssh key for this user at #{ssh_key_location}, we will create one now"))
-      say(bold("More on creating ssh keys here: http://en.wikipedia.org/wiki/ssh-keygen"))
-      `ssh-keygen -t rsa`
+      ssh_key_location = File.expand_path("~/.ssh/id_dsa")
+      say(bold("You are missing a DSA ssh key for this user at #{ssh_key_location}, we will create one now"))
+      say("More on creating ssh keys here: http://en.wikipedia.org/wiki/ssh-keygen")
+      `ssh-keygen -t dsa`
       success = File.exists?(ssh_key_location)
       if success
         say(bold("Key created successfully"))
       else
-        agree(bold("It looks like the ssh key creation failed, try again? [y/n]"))
+        try_again = agree(bold("It looks like the ssh key creation failed, try again? [y/n]"))
+        if try_again
+          create_ssh_keys
+        else
+          say("Please try running the setup process again")
+          exit
+        end
       end
     end
 

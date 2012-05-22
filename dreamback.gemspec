@@ -18,4 +18,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency("json")
   gem.add_dependency("net-sftp")
   gem.add_dependency("cronedit")
+  gem.add_dependency("commander")
+
+  gem.executables = %w(dreamback)
 end
