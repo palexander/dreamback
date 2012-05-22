@@ -46,7 +46,7 @@ module Dreamback
         say(bold("Copying the ssh key to your backup server, type in your password if prompted for #{@settings[:backup_server_user]}@#{@settings[:backup_server]}"))
         overwrite_keys = agree(bold("WARNING: ") + "This will overwrite existing ssh keys on your backup user account. Proceed? [y/n]: ")
         if overwrite_keys
-          sftp_password = ask("Password for #{@settings[:backup_server]}@#{@settings[:backup_server_user]}: ") { |q| q.echo = "*" }
+          sftp_password = ask("Password for #{@settings[:backup_server_user]}@#{@settings[:backup_server]}: ") { |q| q.echo = "*" }
           sftp_ssh_key_upload(sftp_password)
         else
           say("You will need to add the ssh key yourself to automate backups")
@@ -92,8 +92,22 @@ module Dreamback
     # @param [String] password for backup user
     def self.sftp_ssh_key_upload(sftp_password)
       Net::SFTP.start(@settings[:backup_server], @settings[:backup_server_user], :password => sftp_password) do |sftp|
-        sftp.file.open(".ssh/authorized_keys", "w") do |f|
-          f.write File.open(File.expand_path("~/.ssh/id_dsa"), "r").read
+        # Create the .ssh folder if it doesn't exist
+        ssh_folder_exists = false
+        begin
+          sftp.stat!(".ssh") do |response|
+            ssh_folder_exists = response.ok?
+          end
+        rescue Net::SFTP::StatusException => e
+          ssh_folder_exists = false if e.code == 2
+        end
+
+        unless ssh_folder_exists
+          sftp.mkdir!(".ssh")
+        end
+
+        sftp.file.open(".ssh/authorized_keys", "w+") do |f|
+          f.write File.open(File.expand_path("~/.ssh/id_dsa.pub"), "r").read
         end
       end
     end
