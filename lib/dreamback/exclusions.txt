@@ -1,0 +1,13 @@
+bin
+cgi-bin
+include
+jabber
+php5
+php5dist
+php5source
+share
+lib
+logs
+mail
+Maildir
+tmp

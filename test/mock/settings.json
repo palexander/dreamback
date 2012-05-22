@@ -1,0 +1,19 @@
+{
+  "backup_server_user": "blah",
+  "dreamhost_users": [
+    {
+      "user": "u",
+      "server": "d1.dev"
+    },
+    {
+      "user": "u2",
+      "server": "d2.dev"
+    },
+    {
+      "user": "u3",
+      "server": "d3.dev"
+    }
+  ],
+  "days_to_keep": 7,
+  "backup_server": "backup.dev"
+}
