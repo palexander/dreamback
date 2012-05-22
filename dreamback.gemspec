@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["palexander@stanford.edu"]
   gem.description   = %q{The easiest, cheapest way to back up your dreamhost accounts}
   gem.summary       = %q{Dreamback is the easiest way to automate your backups on dreamhost. Dreamhost does not guarantee their backups of your users (though they've saved me with backups before), so it's best to run backups yourself.}
-  gem.homepage      = "http://github.com/dreamback"
+  gem.homepage      = "https://github.com/palexander/dreamback"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
