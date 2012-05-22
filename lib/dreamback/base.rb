@@ -16,7 +16,7 @@ command :backup do |c|
   c.summary = 'Run a backup process immediately. This command can also be added to a cron job.'
   c.action do |args, options|
     Dreamback::Initializer.setup
-    Dreamback::Backup.setup
+    Dreamback::Backup.start
   end
 end
 
