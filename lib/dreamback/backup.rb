@@ -76,23 +76,26 @@ module Dreamback
     # Sync to the backup server using link-dest to save space
     # @param [String] name of the most recent backup folder prior to starting this run to link against
     def self.rsync_backup(link_dir)
-      backup_server_user = Dreamback.settings[:backup_server_user]
-      backup_server = Dreamback.settings[:backup_server]
-      today = Time.now.strftime("%Y%m%d")
-      Dreamback.settings[:dreamhost_users].each do |dreamhost|
-        # User that we're going to back up
-        user = dreamhost[:user]
-        server = dreamhost[:server]
-        # rsync won't do remote<->remote syncing, so we stage everything here first
-        tmp_dir = File.expand_path("~/.dreamback_tmp")
-        Dir.mkdir(tmp_dir) unless File.exists?(tmp_dir)
-        `rsync -e ssh -av --keep-dirlinks --copy-links #{user}@#{server}:~/ #{tmp_dir}/#{user}@#{server}`
-        # Now we can sync local to remote
-        # Only use link-dest if a previous folder to link to exists
-        link_dest = link_dir.nil? ? "" : "--link-dest=~#{BACKUP_FOLDER.gsub(".", "")}/#{link_dir}"
-        `rsync -e ssh -av --delete --copy-links --keep-dirlinks #{link_dest} #{tmp_dir}/ #{backup_server_user}@#{backup_server}:#{BACKUP_FOLDER}/dreamback.#{today}`
+      tmp_dir_path = "~/.dreamback_tmp"
+      begin
+        backup_server_user = Dreamback.settings[:backup_server_user]
+        backup_server = Dreamback.settings[:backup_server]
+        today = Time.now.strftime("%Y%m%d")
+        Dreamback.settings[:dreamhost_users].each do |dreamhost|
+          # User that we're going to back up
+          user = dreamhost[:user]
+          server = dreamhost[:server]
+          # rsync won't do remote<->remote syncing, so we stage everything here first
+          tmp_dir = File.expand_path(tmp_dir_path)
+          Dir.mkdir(tmp_dir) unless File.exists?(tmp_dir)
+          `rsync -e ssh -av --keep-dirlinks --copy-links #{user}@#{server}:~/ #{tmp_dir}/#{user}@#{server}`
+          # Now we can sync local to remote. Only use link-dest if a previous folder to link to exists.
+          link_dest = link_dir.nil? ? "" : "--link-dest=~#{BACKUP_FOLDER.gsub(".", "")}/#{link_dir}"
+          `rsync -e ssh -av --delete --copy-links --keep-dirlinks #{link_dest} #{tmp_dir}/ #{backup_server_user}@#{backup_server}:#{BACKUP_FOLDER}/dreamback.#{today}`
+        end
+      ensure
         # Remove the staging directory
-        `rm -rf #{tmp_dir}`
+        `rm -rf #{File.expand_path(tmp_dir_path)}`
       end
     end
   end
