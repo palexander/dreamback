@@ -69,9 +69,16 @@ module Dreamback
         setup_cron = agree(bold("Would you like to add a cron job to automatically run the backup? [y/n]: "))
         if setup_cron
           crontab_email = ask("Dreamhost requires an email address to send crontab output to, please provide one: ") { |q| q.validate = /\b[A-Za-z0-9._%-\+]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}\b/ }
+
+          # Set environment if these paths exist
+          gems = File.expand_path("/etc/profile")
+          if File.exists?(gems)
+            cron_profile = ". /etc/profile &&"
+          end
+
           ct = File.open(File.expand_path("~/.dreamback_crontab"), "w+")
           ct << "MAILTO=#{crontab_email}\n"
-          ct << "0 1 * * * dreamback backup"
+          ct << "0 1 * * * #{cron_profile} dreamback backup"
           ct.close
           `crontab #{ct.path}`
           File.delete(ct.path)

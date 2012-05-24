@@ -1,9 +1,3 @@
 #!/usr/bin/env ruby
 
-# Set environment if these paths exist
-gems = File.expand_path("/etc/profile")
-if File.exists?(gems)
-  `. /etc/profile`
-end
-
 require 'dreamback'
