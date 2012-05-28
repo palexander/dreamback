@@ -58,6 +58,7 @@ module Dreamback
 
     # This uses a hack where we sync an empty directory to remove files
     # We do this because sftp has no recursive delete method
+    # @params [Array[String]] list of backup directories
     def self.rsync_delete(directories)
       empty_dir_path = File.expand_path("../.dreamback_empty_dir", __FILE__)
       empty_dir = Dir.mkdir(empty_dir_path) unless File.exists?(empty_dir_path)
@@ -77,6 +78,9 @@ module Dreamback
     # @param [String] name of the most recent backup folder prior to starting this run to link against
     def self.rsync_backup(link_dir)
       tmp_dir_path = "~/.dreamback_tmp"
+      user_exclusions_path = File.expand_path("~/.dreamback_exclusions")
+      default_exclusions_path = File.expand_path("../exclusions.txt", __FILE__)
+      exclusions_path = File.exists?(user_exclusions_path) ? user_exclusions_path : default_exclusions_path
       begin
         backup_server_user = Dreamback.settings[:backup_server_user]
         backup_server = Dreamback.settings[:backup_server]
@@ -88,7 +92,7 @@ module Dreamback
           # rsync won't do remote<->remote syncing, so we stage everything here first
           tmp_dir = File.expand_path(tmp_dir_path)
           Dir.mkdir(tmp_dir) unless File.exists?(tmp_dir)
-          `rsync -e ssh -av --keep-dirlinks --copy-links #{user}@#{server}:~/ #{tmp_dir}/#{user}@#{server}`
+          `rsync -e ssh -av --keep-dirlinks --exclude-from #{exclusions_path} --copy-links #{user}@#{server}:~/ #{tmp_dir}/#{user}@#{server}`
           # Now we can sync local to remote. Only use link-dest if a previous folder to link to exists.
           link_dest = link_dir.nil? ? "" : "--link-dest=~#{BACKUP_FOLDER.gsub(".", "")}/#{link_dir}"
           `rsync -e ssh -av --delete --copy-links --keep-dirlinks #{link_dest} #{tmp_dir}/ #{backup_server_user}@#{backup_server}:#{BACKUP_FOLDER}/dreamback.#{today}`
