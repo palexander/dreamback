@@ -25,7 +25,7 @@ module Dreamback
     @settings = {}
 
     # Walks a user through the initial setup process
-    def self.setup
+    def self.setup(direct = false)
       # Check to see if settings exist
       load_settings(SETTINGS_LOCATION)
 
@@ -34,7 +34,9 @@ module Dreamback
         create_new_settings
         save_settings(SETTINGS_LOCATION)
       else
-        say(bold("You have already setup Dreamback. Please run \"dreamback backup\" to start a backup."))
+        if direct
+          say(bold("You have already setup Dreamback. Please run \"dreamback backup\" to start a backup."))
+        end
       end
 
       # Create ssh keys if they don't exist

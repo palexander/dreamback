@@ -7,7 +7,7 @@ command :setup do |c|
   c.syntax = 'dreamback start [options]'
   c.summary = 'This will guide you through setting up Dreamback'
   c.action do |args, options|
-    Dreamback::Initializer.setup
+    Dreamback::Initializer.setup(true)
   end
 end
 
