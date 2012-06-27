@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Dreamback by palexander</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Dreamback</h1>
+        <p>Dreamback is the easiest way to automate your backups on dreamhost. Dreamhost does not guarantee their backups of your users (though they've saved me with backups before), so it's best to run backups yourself.</p>
+
+        <p class="view"><a href="https://github.com/palexander/dreamback">View the Project on GitHub <small>palexander/dreamback</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/palexander/dreamback/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/palexander/dreamback/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/palexander/dreamback">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>Dreamback is the easiest way to automate your backups on dreamhost.</h2>
+
+<p>Dreamhost does not guarantee their backups of your users (though they've saved me with backups before), so it's best to run backups yourself.</p>
+
+<h3>This is beta quality software. Please report <a href="https://github.com/palexander/dreamback/issues">issues</a> if you have them.</h3>
+
+<h2>Using Dreamback is easy:</h2>
+
+<ol>
+<li>Create a user on dreamhost to schedule your backups</li>
+<li>Log in with your new user</li>
+<li><code>gem install dreamback</code></li>
+<li><code>dreamback</code></li>
+<li>Answer the questions to setup your automated backup</li>
+</ol><h2>Security</h2>
+
+<p><strong>IMPORTANT NOTE:</strong> Dreamback relies on ssh keys to login to remote accounts, both for accounts you'd like to back up and the backup account that Dreamhost provides. If the keys don't exist you will be prompted to create them. If the account you are using to run the Dreamback process is compromised, it will have access to all of the accounts you have keys for.</p>
+
+<p><strong>For this reason, I highly recommend you create a special account for running the backup process with a very sophisticated password and all security options provided by Dreamhost enabled</strong>. This won't eliminate all security threats, but hopefully it will minimize the possibility of a breach that would affect all of your accounts.</p>
+
+<h2>Installation</h2>
+
+<pre><code>gem install dreamback
+</code></pre>
+
+<h2>Usage</h2>
+
+<p>Run <code>dreamback</code> to configure automated backups.
+Run <code>dreamback backup</code> to immediately run a backup.</p>
+
+<h2>Contributing</h2>
+
+<p>I'm happy to take pull or feature requests. Use the Github issue tracker if you have suggestions or need help.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/palexander">palexander</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-77933-11");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
