@@ -11,3 +11,4 @@ logs
 mail
 Maildir
 tmp
+src

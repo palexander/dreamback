@@ -1,6 +1,7 @@
 require 'json'
 require 'net/sftp'
 require 'cronedit'
+require 'highline/import'
 
 module Dreamback
   @settings
@@ -35,7 +36,20 @@ module Dreamback
         save_settings(SETTINGS_LOCATION)
       else
         if direct
-          say(bold("You have already setup Dreamback. Please run \"dreamback backup\" to start a backup."))
+          say(bold("You have already setup Dreamback."))
+
+          choose("From here you can:  \n") do |menu|
+            menu.prompt = "Select an option:  "
+
+            menu.choice("Run setup again") {
+              create_new_settings
+              save_settings(SETTINGS_LOCATION)
+            }
+
+            menu.choice("Run a backup right now") {
+              Dreamback::Backup.start
+            }
+          end
         end
       end
 
@@ -125,6 +139,7 @@ module Dreamback
     def self.create_new_settings
       settings = {}
       say("#{bold("Server Where We Should Store Your Backup")}\nYour dreamhost backup-specific account will work best, but any POSIX server with rsync should work\n<%= color('Note:', BOLD)%> dreamhost does not allow you to store non-webhosted data except your BACKUP-SPECIFIC account")
+      say("You can configure your Dreamhost backup user here: https://panel.dreamhost.com/index.cgi?tree=users.backup")
       settings[:backup_server] = ask("Server name: ")
       settings[:backup_server_user] = ask(bold("Username for the backup server: "))
       settings[:dreamhost_users] = []
@@ -136,7 +151,25 @@ module Dreamback
         settings[:dreamhost_users] << dreamhost
         another_user = agree(bold("Add another dreamhost account? [y/n]"))
       end
-      settings[:days_to_keep] = ask(bold("How many days of backups do you want to keep [1-30]? "), Integer) {|q| q.in = 1..30}
+
+      choose("What method should we use to keep backups?  \n") do |menu|
+        menu.prompt = "Select an option  "
+
+        menu.choice("Number of days") {
+          settings[:days_to_keep] = ask(bold("How many days of backups do you want to keep [1-9999]? "), Integer) {|q| q.in = 1..9999}
+          say("#{bold("We will keep #{settings[:days_to_keep]} days of backups")}")
+        }
+
+        menu.choice("Time machine-inspired\n   (daily backups for seven days, weekly backups for three months, monthly backups forever)") {
+          settings[:keep_time_machine] = true
+          say("#{bold("We will keep backups based on a time machine-inspired method")}")
+        }
+
+        menu.choice("Keep everything") {
+          say("#{bold("We will keep everything. This may take a lot of space.")}")
+        }
+      end
+
       @settings = settings
     end
 
